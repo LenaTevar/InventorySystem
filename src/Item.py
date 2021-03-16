@@ -1,9 +1,12 @@
-from Items_Types import Item_Type
+from InventorySystem.src.Items_Types import Item_Type
 
 class Item:
-    def __init__(self):
-        self.id = 0
-        self.Name = ""
-        self.Weight = 0
-        self.Value = 0
-        self.Type = None
+    def __init__(self, name="None", weight=0, value=0, itype=Item_Type.Weapon):
+        self.id = repr(itype)
+        self.Type = itype
+        self.Name = name
+        self.Weight = weight
+        self.Value = value
+
+    
+        
