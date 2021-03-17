@@ -17,14 +17,21 @@ def empty_inventory():
 @pytest.fixture
 def item_weapon():
     """
-    Creates an light item
+    Creates an light item weight=1, value=1
     """
     return Item(name="Test item", weight=1, value=1)
 
 @pytest.fixture
+def medium_item():
+    """
+    Creates a medium item weight=20, value=5
+    """
+    return Item(name="Heavy item", weight=20, value=5, itype=Item_Type.Consumable)
+
+@pytest.fixture
 def heavy_item():
     """
-    Creates a heavy and expensive item
+    Creates a heavy and expensive item weight=99, value=99
     """
     return Item(name="Heavy item", weight=99, value=99, itype=Item_Type.Gear)
 
@@ -55,11 +62,10 @@ def test_inventory_pickup(empty_inventory, item_weapon, heavy_item):
         assert isinstance(ex, type(Exception))
         assert ex.args == "Weigth exceeded"
 
-    try:
+def test_inventory_typeError(empty_inventory):
+    with pytest.raises(TypeError):
         empty_inventory.pickup()
-    except Exception as ex:
-        assert isinstance(ex, type(Exception))
-        assert ex.args == "TypeError: pickup() missing 1 required positional argument: 'item'"
+
 
 
 def test_inventory_drop(empty_inventory, item_weapon, heavy_item):
@@ -75,13 +81,38 @@ def test_inventory_item_get_sort():
     #free item slots
     #total number of items
     pass
-def test_inventory_weight():
-    #get remaining weight
-    #current weight
-    #get weight by tipe of item
-    pass 
-def test_inventory_cash():
-    #sell item
-    #buy item
-    #pickup cash
+def test_inventory_weight(empty_inventory, item_weapon, medium_item):
+    empty_inventory.pickup(item_weapon)
+    empty_inventory.pickup(medium_item)
+    expected_total_weight = item_weapon.Weight + medium_item.Weight
+    assert empty_inventory.remaining_weight() == empty_inventory.max_weight - expected_total_weight
+    assert empty_inventory.current_weight() == expected_total_weight
+    assert empty_inventory.weight_by_type(Item_Type.Consumable) == 20
+
+def test_inventory_cash(empty_inventory, item_weapon, medium_item, heavy_item):
+    empty_inventory.pickup(item_weapon)
+    empty_inventory.pickup(medium_item)
+    empty_inventory.pickup(heavy_item)
+    # Simple sell
+    assert empty_inventory.sell(heavy_item)
+    assert empty_inventory.current_cash == 99
+    # Simple buy
+    assert empty_inventory.buy(heavy_item)
+    assert empty_inventory.current_cash == 0
+    #Not enough money
+    try:
+        empty_inventory.buy(heavy_item)
+    except InvalidQuantityException as ex:
+        assert isinstance(ex, type(Exception))
+        assert ex.args == "Not enough money"
+    # Simple pickup
+    current_money = empty_inventory.current_cash
+    empty_inventory.get_cash(100)
+    assert empty_inventory.current_cash == current_money + 100
+    #Not enough space
+    try:
+        empty_inventory.buy(item_weapon)
+    except InvalidQuantityException as ex:
+        assert isinstance(ex, type(Exception))
+        assert ex.args == "Space exceeded"
     pass 
