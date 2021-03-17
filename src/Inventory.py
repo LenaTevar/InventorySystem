@@ -8,6 +8,7 @@ class Inventory:
         self.items_list = []
 
     def pickup(self, item):
+
         if self._itemlist_freespace() :
             if self._items_freeweight():
                 self.items_list.append(item)
@@ -17,6 +18,12 @@ class Inventory:
         else: 
             return InvalidQuantityException("Space exceeded")
 
+    def drop(self, item):
+        if item in self.items_list:
+            self.items_list.remove(item)
+            return True
+        else:
+            return False
     
     def _itemlist_freespace(self):
         return len(self.items_list) < self.max_size

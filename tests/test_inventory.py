@@ -16,10 +16,16 @@ def empty_inventory():
 
 @pytest.fixture
 def item_weapon():
+    """
+    Creates an light item
+    """
     return Item(name="Test item", weight=1, value=1)
 
 @pytest.fixture
 def heavy_item():
+    """
+    Creates a heavy and expensive item
+    """
     return Item(name="Heavy item", weight=99, value=99, itype=Item_Type.Gear)
 
 ##########################################################
@@ -31,7 +37,7 @@ def test_inventory(empty_inventory):
     assert empty_inventory.max_weight == 100
     assert empty_inventory.max_size == 25
 
-def test_inventory_pickup(empty_inventory, item_weapon):    
+def test_inventory_pickup(empty_inventory, item_weapon, heavy_item):    
     assert empty_inventory.pickup(item_weapon)
 
     for x in range(24):
@@ -43,10 +49,23 @@ def test_inventory_pickup(empty_inventory, item_weapon):
         assert isinstance(ex, type(Exception))
         assert ex.args == "Space exceeded"
 
+    try:
+        empty_inventory.pickup(heavy_item)
+    except InvalidQuantityException as ex:
+        assert isinstance(ex, type(Exception))
+        assert ex.args == "Weigth exceeded"
 
-def test_inventory_drop(empty_inventory, item_weapon): 
+    try:
+        empty_inventory.pickup()
+    except Exception as ex:
+        assert isinstance(ex, type(Exception))
+        assert ex.args == "TypeError: pickup() missing 1 required positional argument: 'item'"
+
+
+def test_inventory_drop(empty_inventory, item_weapon, heavy_item):
+    empty_inventory.pickup(item_weapon)
     assert empty_inventory.drop(item_weapon)
-    pass
+    assert not empty_inventory.drop(heavy_item)
 
 def test_inventory_item_get_sort():
     #get items by type
