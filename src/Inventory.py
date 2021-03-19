@@ -7,9 +7,8 @@ class Inventory:
         self.current_cash = 0   
         self.items_list = []
 
-    def pickup(self, item=None):        
-
-        if self._itemlist_freespace() :
+    def pickup(self, item):
+        if self._itemlist_freespace():
             if self._items_freeweight():
                 self.items_list.append(item)
                 return True
@@ -18,7 +17,7 @@ class Inventory:
         else: 
             return InvalidQuantityException("Space exceeded")
 
-    def get_cash(cash):
+    def get_cash(self,cash):
         self.current_cash = self.current_cash + cash
 
     def drop(self, item):
