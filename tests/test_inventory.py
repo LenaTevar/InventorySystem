@@ -1,7 +1,7 @@
 from InventorySystem.src.Inventory import Inventory
 from InventorySystem.src.Item import Item
 from InventorySystem.src.Items_Types import Item_Type
-import pytest
+import pytest 
 ##########################################################
 #
 #   FIXTURES
@@ -108,24 +108,25 @@ def test_inventory_item_get_sort(loaded_inventory,list_of_items):
     resulted_feesize_total = loaded_inventory.get_free_space()
     assert expected_feesize_total == resulted_feesize_total
 
-    expected_by_type = [item for item in  list_of_items if item.itype == Item_Type.Weapon]
+    expected_by_type = [item for item in  list_of_items if item.type == Item_Type.Weapon]
     resulted_by_type = loaded_inventory.get_items_by_type(Item_Type.Weapon)
     assert expected_by_type == resulted_by_type
     
 
-    expected_sorted_by_value = sort(list_of_items, key=lambda item: item.Value)
-    resulted_sorted_by_value = loaded_inventory.get_all_by_value()
+    expected_sorted_by_value = sorted(list_of_items, key=lambda item: item.value)
+    resulted_sorted_by_value = loaded_inventory.items_sort_value()
     assert expected_sorted_by_value == resulted_sorted_by_value
 
-    expected_sorted_by_weight = sort(list_of_items, key=lambda item: item.Weight)
-    resulted_sorted_by_weight = loaded_inventory.get_all_by_weight()
+    expected_sorted_by_weight = sorted(list_of_items, key=lambda item: item.weight)
+    resulted_sorted_by_weight = loaded_inventory.items_sort_weight()
     assert expected_sorted_by_weight == resulted_sorted_by_weight
 
 
 def test_inventory_weight(empty_inventory, item_weapon, medium_item):
     empty_inventory.pickup(item_weapon)
     empty_inventory.pickup(medium_item)
-    expected_total_weight = item_weapon.Weight + medium_item.Weight
+    expected_total_weight = item_weapon.weight + medium_item.weight
+
     assert empty_inventory.remaining_weight() == empty_inventory.max_weight - expected_total_weight
     assert empty_inventory.current_weight() == expected_total_weight
     assert empty_inventory.weight_by_type(Item_Type.Consumable) == 20
@@ -134,22 +135,27 @@ def test_inventory_cash(empty_inventory, item_weapon, medium_item, heavy_item):
     empty_inventory.pickup(item_weapon)
     empty_inventory.pickup(medium_item)
     empty_inventory.pickup(heavy_item)
+
     # Simple sell
     assert empty_inventory.sell(heavy_item)
     assert empty_inventory.current_cash == 99
+
     # Simple buy
     assert empty_inventory.buy(heavy_item)
     assert empty_inventory.current_cash == 0
+
     #Not enough money
     try:
         empty_inventory.buy(heavy_item)
     except InvalidQuantityException as ex:
         assert isinstance(ex, type(Exception))
         assert ex.args == "Not enough money"
+
     # Simple pickup
     current_money = empty_inventory.current_cash
     empty_inventory.get_cash(100)
     assert empty_inventory.current_cash == current_money + 100
+
     #Not enough space
     try:
         empty_inventory.buy(item_weapon)
