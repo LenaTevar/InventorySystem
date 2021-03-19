@@ -35,6 +35,7 @@ def heavy_item():
     Creates a heavy and expensive item weight=99, value=99
     """
     return Item(name="Heavy item", weight=99, value=99, itype=Item_Type.Gear)
+    
 @pytest.fixture
 def loaded_inventory():
     """
@@ -52,6 +53,7 @@ def loaded_inventory():
     inventory.pickup(stick)
     inventory.pickup(Ear)
     return inventory
+
 @pytest.fixture
 def list_of_items():
     nokia_phone = Item(name="Nokia Phone", weight=1, value=100, itype=Item_Type.Weapon)
@@ -65,45 +67,27 @@ def list_of_items():
 #   INVENTORY TESTS
 #
 ##########################################################
-def test_inventory(empty_inventory):    
-    assert empty_inventory.max_weight == 100
-    assert empty_inventory.max_size == 25
 
-def test_inventory_pickup(empty_inventory, item_weapon, heavy_item):    
-    assert empty_inventory.pickup(item_weapon)
 
-    for x in range(24):
-        empty_inventory.pickup(item_weapon)
+def test_inventory_item_get_sort(loaded_inventory,list_of_items):
+   
+    expected_total = len(list_of_items)
+    resulted_total = loaded_inventory.get_totalnr_items()
+    assert expected_total == resulted_total
+
+    expected_feesize_total = loaded_inventory.max_size - len(list_of_items)
+    resulted_feesize_total = loaded_inventory.get_free_space()
+    assert expected_feesize_total == resulted_feesize_total
+
+    expected_by_type = [item for item in  list_of_items if item.type == Item_Type.Weapon]
+    resulted_by_type = loaded_inventory.get_items_by_type(Item_Type.Weapon)
+    assert expected_by_type == resulted_by_type
     
-    try:
-        empty_inventory.pickup(item_weapon)
-    except InvalidQuantityException as ex:
-        assert isinstance(ex, type(Exception))
-        assert ex.args == "Space exceeded"
 
-    try:
-        empty_inventory.pickup(heavy_item)
-    except InvalidQuantityException as ex:
-        assert isinstance(ex, type(Exception))
-        assert ex.args == "Weigth exceeded"
+    expected_sorted_by_value = sorted(list_of_items, key=lambda item: item.value)
+    resulted_sorted_by_value = loaded_inventory.items_sort_value()
+    assert expected_sorted_by_value == resulted_sorted_by_value
 
-def test_inventory_typeError(empty_inventory):
-    with pytest.raises(TypeError):
-        empty_inventory.pickup()
-
-
-
-def test_inventory_drop(empty_inventory, item_weapon, heavy_item):
-    empty_inventory.pickup(item_weapon)
-    assert empty_inventory.drop(item_weapon)
-    assert not empty_inventory.drop(heavy_item)
-
-
-def test_inventory_weight(empty_inventory, item_weapon, medium_item):
-    empty_inventory.pickup(item_weapon)
-    empty_inventory.pickup(medium_item)
-    expected_total_weight = item_weapon.weight + medium_item.weight
-
-    assert empty_inventory.remaining_weight() == empty_inventory.max_weight - expected_total_weight
-    assert empty_inventory.current_weight() == expected_total_weight
-    assert empty_inventory.weight_by_type(Item_Type.Consumable) == 20
+    expected_sorted_by_weight = sorted(list_of_items, key=lambda item: item.weight)
+    resulted_sorted_by_weight = loaded_inventory.items_sort_weight()
+    assert expected_sorted_by_weight == resulted_sorted_by_weight

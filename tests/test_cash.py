@@ -65,45 +65,37 @@ def list_of_items():
 #   INVENTORY TESTS
 #
 ##########################################################
-def test_inventory(empty_inventory):    
-    assert empty_inventory.max_weight == 100
-    assert empty_inventory.max_size == 25
 
-def test_inventory_pickup(empty_inventory, item_weapon, heavy_item):    
-    assert empty_inventory.pickup(item_weapon)
 
-    for x in range(24):
-        empty_inventory.pickup(item_weapon)
-    
+def test_inventory_cash(empty_inventory, item_weapon, medium_item, heavy_item):
+    empty_inventory.pickup(item_weapon)
+    empty_inventory.pickup(medium_item)
+    empty_inventory.pickup(heavy_item)
+
+    # Simple sell
+    assert empty_inventory.sell(heavy_item)
+    assert empty_inventory.current_cash == 99
+
+    # Simple buy
+    assert empty_inventory.buy(heavy_item)
+    assert empty_inventory.current_cash == 0
+
+    #Not enough money
     try:
-        empty_inventory.pickup(item_weapon)
+        empty_inventory.buy(heavy_item)
+    except InvalidQuantityException as ex:
+        assert isinstance(ex, type(Exception))
+        assert ex.args == "Not enough money"
+
+    # Simple pickup
+    current_money = empty_inventory.current_cash
+    empty_inventory.get_cash(100)
+    assert empty_inventory.current_cash == current_money + 100
+
+    #Not enough space
+    try:
+        empty_inventory.buy(item_weapon)
     except InvalidQuantityException as ex:
         assert isinstance(ex, type(Exception))
         assert ex.args == "Space exceeded"
-
-    try:
-        empty_inventory.pickup(heavy_item)
-    except InvalidQuantityException as ex:
-        assert isinstance(ex, type(Exception))
-        assert ex.args == "Weigth exceeded"
-
-def test_inventory_typeError(empty_inventory):
-    with pytest.raises(TypeError):
-        empty_inventory.pickup()
-
-
-
-def test_inventory_drop(empty_inventory, item_weapon, heavy_item):
-    empty_inventory.pickup(item_weapon)
-    assert empty_inventory.drop(item_weapon)
-    assert not empty_inventory.drop(heavy_item)
-
-
-def test_inventory_weight(empty_inventory, item_weapon, medium_item):
-    empty_inventory.pickup(item_weapon)
-    empty_inventory.pickup(medium_item)
-    expected_total_weight = item_weapon.weight + medium_item.weight
-
-    assert empty_inventory.remaining_weight() == empty_inventory.max_weight - expected_total_weight
-    assert empty_inventory.current_weight() == expected_total_weight
-    assert empty_inventory.weight_by_type(Item_Type.Consumable) == 20
+    
