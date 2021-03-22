@@ -1,7 +1,9 @@
 from InventorySystem.src.Inventory import Inventory
 from InventorySystem.src.Item import Item
 from InventorySystem.src.Items_Types import Item_Type
+from InventorySystem.src.InvalidQuantityException import InvalidQuantityException
 import pytest 
+
 ##########################################################
 #
 #   FIXTURES
@@ -60,46 +62,57 @@ def list_of_items():
     Ear = Item(name="Enemy's Ear", weight=1, value=1, itype=Item_Type.Consumable)
     silly_hat = Item(name="Silly hat", weight=5, value=34, itype=Item_Type.Gear)
     return [nokia_phone,stick,coffee,Ear,silly_hat]
+
 ##########################################################
 #
 #   INVENTORY TESTS
 #
 ##########################################################
-def test_inventory(empty_inventory):    
+def test_inventory(empty_inventory):  
+    # Test basic empty inventory data 
     assert empty_inventory.max_weight == 100
     assert empty_inventory.max_size == 25
+    assert empty_inventory.current_cash == 0
+    assert len(empty_inventory.items_list) == 0
+    assert empty_inventory.remaining_weight() == empty_inventory.max_weight
+    assert empty_inventory.current_weight() == 0
 
-def test_inventory_pickup(empty_inventory, item_weapon, heavy_item):    
-    assert empty_inventory.pickup(item_weapon)
+def test_inventory_pickup():  
+    # Test pick up one item
+    empty_inventory = Inventory()
+    item_small =  Item(name="Test item", weight=1, value=1)
 
+    assert empty_inventory.pickup(item_small)
+
+    # Test inventory full
     for x in range(24):
-        empty_inventory.pickup(item_weapon)
-    
-    try:
-        empty_inventory.pickup(item_weapon)
-    except InvalidQuantityException as ex:
-        assert isinstance(ex, type(Exception))
-        assert ex.args == "Space exceeded"
+        empty_inventory.pickup(item_small)
+    assert empty_inventory.get_totalnr_items() == 25
 
-    try:
-        empty_inventory.pickup(heavy_item)
-    except InvalidQuantityException as ex:
-        assert isinstance(ex, type(Exception))
-        assert ex.args == "Weigth exceeded"
+    assert empty_inventory.current_weight() == 25
+    assert not empty_inventory._itemlist_freespace()
 
+    with pytest.raises(InvalidQuantityException, match=r"Inventory full") as ex: 
+        empty_inventory.pickup(item_small)  
+        
 def test_inventory_typeError(empty_inventory):
+    # Test no params exception
     with pytest.raises(TypeError):
         empty_inventory.pickup()
 
-
-
 def test_inventory_drop(empty_inventory, item_weapon, heavy_item):
+    # Test drop item and try to drop item not owned
     empty_inventory.pickup(item_weapon)
     assert empty_inventory.drop(item_weapon)
     assert not empty_inventory.drop(heavy_item)
 
 
 def test_inventory_weight(empty_inventory, item_weapon, medium_item):
+    # Test weight of the inventory
+    expected_total_weight = 0
+    
+    assert empty_inventory.weight_by_type(Item_Type.Consumable) == 0
+
     empty_inventory.pickup(item_weapon)
     empty_inventory.pickup(medium_item)
     expected_total_weight = item_weapon.weight + medium_item.weight
@@ -107,3 +120,12 @@ def test_inventory_weight(empty_inventory, item_weapon, medium_item):
     assert empty_inventory.remaining_weight() == empty_inventory.max_weight - expected_total_weight
     assert empty_inventory.current_weight() == expected_total_weight
     assert empty_inventory.weight_by_type(Item_Type.Consumable) == 20
+
+def test_inventory_pickup_weight(empty_inventory, item_weapon, heavy_item): 
+    # Test weight limit exception
+
+    empty_inventory.pickup(heavy_item)
+    assert empty_inventory.current_weight() == heavy_item.weight
+
+    with pytest.raises(InvalidQuantityException, match=r"Weight full") as ex: 
+        empty_inventory.pickup(heavy_item) 

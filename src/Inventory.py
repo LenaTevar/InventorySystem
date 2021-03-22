@@ -8,14 +8,13 @@ class Inventory:
         self.items_list = []
 
     def pickup(self, item):
-        if self._itemlist_freespace():
-            if self._items_freeweight():
-                self.items_list.append(item)
-                return True
-            else: 
-                return InvalidQuantityException("Weigth exceeded")
-        else: 
-            return InvalidQuantityException("Space exceeded")
+        if not self._itemlist_freespace():
+            raise InvalidQuantityException("Inventory full")
+        if not self._items_freeweight(item.weight):
+            raise InvalidQuantityException("Weight full")
+        else:
+            self.items_list.append(item)
+            return True
 
     def get_cash(self,cash):
         self.current_cash = self.current_cash + cash
@@ -53,7 +52,7 @@ class Inventory:
             self.current_cash = self.current_cash - item.value   
             return True   
         else:
-            return InvalidQuantityException("Not enough money") 
+            raise InvalidQuantityException("Not enough money") 
         
     def get_totalnr_items(self):
         return len(self.items_list)
@@ -82,8 +81,9 @@ class Inventory:
     def _itemlist_freespace(self):
         return len(self.items_list) < self.max_size
 
-    def _items_freeweight(self):
-        result = 0
-        for item in self.items_list:
-            result = result + item.weight
-        return result <= self.max_weight
+    def _items_freeweight(self, item_weight):
+        result = self.remaining_weight() - item_weight
+        if result > 0: 
+            return True
+        else:
+            return False

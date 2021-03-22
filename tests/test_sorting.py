@@ -70,24 +70,27 @@ def list_of_items():
 
 
 def test_inventory_item_get_sort(loaded_inventory,list_of_items):
-   
+    # Test lenght of the inventory
     expected_total = len(list_of_items)
     resulted_total = loaded_inventory.get_totalnr_items()
     assert expected_total == resulted_total
 
+    # Test free space left in the inventory
     expected_feesize_total = loaded_inventory.max_size - len(list_of_items)
     resulted_feesize_total = loaded_inventory.get_free_space()
     assert expected_feesize_total == resulted_feesize_total
 
+    # Test get inventory by type of item
     expected_by_type = [item for item in  list_of_items if item.type == Item_Type.Weapon]
     resulted_by_type = loaded_inventory.get_items_by_type(Item_Type.Weapon)
     assert expected_by_type == resulted_by_type
     
-
+    # Test get inventory sorted by value of the items
     expected_sorted_by_value = sorted(list_of_items, key=lambda item: item.value)
     resulted_sorted_by_value = loaded_inventory.items_sort_value()
     assert expected_sorted_by_value == resulted_sorted_by_value
 
+    # Test get inventory sorted by weight of the items
     expected_sorted_by_weight = sorted(list_of_items, key=lambda item: item.weight)
     resulted_sorted_by_weight = loaded_inventory.items_sort_weight()
     assert expected_sorted_by_weight == resulted_sorted_by_weight
